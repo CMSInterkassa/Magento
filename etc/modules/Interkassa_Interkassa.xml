@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Interkassa_Interkassa>
+            <active>true</active>
+            <codePool>local</codePool>
+            <depends>
+                <Mage_Sales />
+                <Mage_Payment />
+            </depends>
+        </Interkassa_Interkassa>
+    </modules>
+</config>
