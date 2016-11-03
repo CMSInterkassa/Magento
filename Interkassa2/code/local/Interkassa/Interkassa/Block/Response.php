@@ -1,10 +1,13 @@
 <?php
 /**
- * Модуль разработан в компании GateOn предназначен для CMS Magento 1.9
- * Сайт разработчикa: www.gateon.net
- * E-mail: www@smartbyte.pro
- * Версия: 1.4
+ * @name Интеркасса 2.0
+ * @description Модуль разработан в компании GateOn предназначен для CMS Magento 1.9.2.4
+ * @author www.gateon.net
+ * @email www@smartbyte.pro
+ * @version 1.5
+ * @update 25.10.2016
  */
+
 
 class Interkassa_Interkassa_Block_Response extends Mage_Core_Block_Abstract
 {
@@ -21,34 +24,20 @@ class Interkassa_Interkassa_Block_Response extends Mage_Core_Block_Abstract
             'test_key' => $oplata->getConfigData('test_key')
         );
 
-        //Вывод всего ответа Интеркассы в log.txt(в корне сайта) по желанию
-        foreach ($_REQUEST as $key => $value) {
-            $str = $key . ' => ' . $value;
-            $this->wrlog($str);
-        }
-        $this->wrlog('--------');
+        if (count($_POST) && $this->checkIP() && $settings['ik_co_id'] == $_POST['ik_co_id']) {
 
+            if ($_POST['ik_inv_st'] == 'success') {
 
-        if (count($_REQUEST) && $settings['ik_co_id'] == $_REQUEST['ik_co_id']) {
-
-            $this->wrlog('params ok');
-
-            if ($_REQUEST['ik_inv_st'] == 'success') {
-
-                $this->wrlog('success');
-
-                if (isset($_REQUEST['ik_pw_via']) && $_REQUEST['ik_pw_via'] == 'test_interkassa_test_xts') {
+                if (isset($_POST['ik_pw_via']) && $_POST['ik_pw_via'] == 'test_interkassa_test_xts') {
                     $secret_key = $settings['test_key'];
                 } else {
                     $secret_key = $settings['secret_key'];
                 }
-                $this->wrlog($secret_key);
 
-                $request_sign = $_REQUEST['ik_sign'];
+                $request_sign = $_POST['ik_sign'];
 
                 $dataSet = [];
-
-                foreach ($_REQUEST as $key => $value) {
+                foreach ($_POST as $key => $value) {
                     if (!preg_match('/ik_/', $key)) continue;
                     $dataSet[$key] = $value;
                 }
@@ -60,14 +49,16 @@ class Interkassa_Interkassa_Block_Response extends Mage_Core_Block_Abstract
                 $sign = base64_encode(md5($signString, true));
 
                 if ($request_sign != $sign) {
-                    $this->wrlog('Подписи не совпадают!');
+                    $order = Mage::getModel('sales/order');
+                    $order->loadByIncrementId($_POST['ik_pm_no']);
+                    $order->setState(Mage_Sales_Model_Order::STATE_CANCELED, true, 'Цифровая подпись не совпала! Заказ отменен!');
 
                 } else {
                     $this->wrlog('Подписи совпадают!');
                     //СМЕНА СТАТУСА ЗАКАЗА В АДМИНКЕ В СЛУЧАЕ УСПЕШНОЙ ОПЛАТЫ
                     $order = Mage::getModel('sales/order');
                     $order->loadByIncrementId($_POST['ik_pm_no']);
-                    $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true, 'Gateway has authorized the payment.');
+                    $order->setState(Mage_Sales_Model_Order::STATE_PROCESSING, true, 'Заказ был оплачен с помощью Интеркасса.');
 
                     $order->sendNewOrderEmail();
                     $order->setEmailSent(true);
@@ -81,6 +72,10 @@ class Interkassa_Interkassa_Block_Response extends Mage_Core_Block_Abstract
                 }
             }
 
+        }else{
+            $order = Mage::getModel('sales/order');
+            $order->loadByIncrementId($_POST['ik_pm_no']);
+            $order->setState(Mage_Sales_Model_Order::STATE_CANCELED, true, 'Ответ Интеркассы неправильный! Заказ отменен!');
         }
 
     }
@@ -92,5 +87,17 @@ class Interkassa_Interkassa_Block_Response extends Mage_Core_Block_Abstract
         $doc = fopen($file, 'a');
         file_put_contents($file, PHP_EOL . $content, FILE_APPEND);
         fclose($doc);
+    }
+    public function checkIP(){
+        $ip_stack = array(
+            'ip_begin'=>'151.80.190.97',
+            'ip_end'=>'151.80.190.104'
+        );
+
+        if(!ip2long($_SERVER['REMOTE_ADDR'])>=ip2long($ip_stack['ip_begin']) && !ip2long($_SERVER['REMOTE_ADDR'])<=ip2long($ip_stack['ip_end'])){
+            $this->wrlog('REQUEST IP'.$_SERVER['REMOTE_ADDR'].'doesnt match');
+            die('Ты мошенник! Пшел вон отсюда!');
+        }
+        return true;
     }
 }

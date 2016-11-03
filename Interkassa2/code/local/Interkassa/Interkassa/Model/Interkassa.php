@@ -1,11 +1,14 @@
 <?php
 
 /**
- * Модуль разработан в компании GateOn предназначен для CMS Magento 1.9
- * Сайт разработчикa: www.gateon.net
- * E-mail: www@smartbyte.pro
- * Версия: 1.4
+ * @name Интеркасса 2.0
+ * @description Модуль разработан в компании GateOn предназначен для CMS Magento 1.9.2.4
+ * @author www.gateon.net
+ * @email www@smartbyte.pro
+ * @version 1.5
+ * @update 25.10.2016
  */
+
 
 class Interkassa_Interkassa_Model_Interkassa extends Mage_Payment_Model_Method_Abstract
 {
