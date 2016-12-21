@@ -1,4 +1,4 @@
-﻿Модуль разработан в компании GateOn предназначен для CMS Magento 1.9
+﻿Модуль разработан в компании GateOn предназначен для CMS Magento версий 1.7 - 1.9
 Сайт разработчикa: www.gateon.net
 E-mail: www@smartbyte.pro
 Версия: 1.5
