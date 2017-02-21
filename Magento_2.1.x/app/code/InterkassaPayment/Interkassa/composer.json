@@ -1,0 +1,6 @@
+{
+  "name": "gateon/magento2-module-payment-interkassa",
+  "description": "Allows pay via Interkassa",
+  "type": "magento2-module",
+  "version": "1.0.0"
+}
