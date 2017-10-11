@@ -10,7 +10,7 @@ use \Magento\Sales\Model\OrderFactory;
 
 use \Magento\Framework\View\Result\PageFactory;
 
-use Interkassa\Interkassa\Model\Interkassa;
+use InterkassaPayment\Interkassa\Model\Interkassa;
 
 class Request extends \Magento\Framework\App\Action\Action
 {

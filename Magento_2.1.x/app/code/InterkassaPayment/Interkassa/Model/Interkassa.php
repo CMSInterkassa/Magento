@@ -2,8 +2,6 @@
 /**
  * @name Интеркасса 2.0
  * @description Модуль разработан в компании GateOn предназначен для CMS Magento 2.1.x
- * @author www.gateon.net
- * @email www@smartbyte.pro
  * @version 1.0
  */
 namespace InterkassaPayment\Interkassa\Model;
@@ -59,6 +57,8 @@ class Interkassa extends AbstractMethod
      */
     protected $_actionUrl = "https://sci.interkassa.com/";
 
+    protected $_checkoutSession;
+
     /**
      * test
      *
@@ -87,9 +87,12 @@ class Interkassa extends AbstractMethod
         \Magento\Sales\Model\OrderFactory $orderFactory,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        \Magento\Checkout\Model\Session $checkoutSession,
         array $data = [])
     {
         $this->orderFactory = $orderFactory;
+
+        $this->_checkoutSession = $checkoutSession;
 
         parent::__construct($context,
             $registry,
@@ -139,6 +142,11 @@ class Interkassa extends AbstractMethod
 
     }
 
+    protected function getCheckoutSession()
+    {
+        return $this->_checkoutSession;
+    }
+
     public function isAPIAvailable()
     {
         return $this->getConfigData('activeAPI');
@@ -171,6 +179,26 @@ class Interkassa extends AbstractMethod
         $ik_sign = base64_encode(md5($arg, true));
 
         return $ik_sign;
+    }
+
+    public function getAnswerFromAPI($data){
+
+        //$orderObj = $this->getOrder($data['ik_pm_no']);
+        //$shippingAddressObj = $orderObj->getShippingAddress();
+        //$shippingAddressArray = $shippingAddressObj->getData();
+        //$data['ik_email'] = $shippingAddressArray['telephone'];
+        //$data['ik_phone'] = $shippingAddressArray['email'];
+        //$data['ik_email'] = $this->getCheckoutSession()->getQuote()->getCustomerEmail();
+        //$data['ik_phone'] = $this->getCheckoutSession()->getQuote()->getTelephone();
+        //$data['ik_phone'] = $orderObj->getBillingAddress()->getTelephone();
+
+        $ch = curl_init('https://sci.interkassa.com/');
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $result = curl_exec($ch);
+        return $result;
     }
 
     public function getPostData($orderId)

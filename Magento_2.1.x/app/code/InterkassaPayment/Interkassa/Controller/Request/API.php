@@ -39,8 +39,12 @@ class API extends \Magento\Framework\App\Action\Action
 
     public function getIkSign(){
        $post = $this->getPost();
+
         if($post){
-           return $this->interkassa->IkSignFormation($post,$this->interkassa->getConfigData('secret_key'));
+            if(isset($post['ik_act']) && $post['ik_act'] == 'process')
+                return $this->interkassa->getAnswerFromAPI($post);
+            else
+                return $this->interkassa->IkSignFormation($post,$this->interkassa->getConfigData('secret_key'));
         }else{
             return array(
                 'error'=>'something wrong in Sign Formation'
