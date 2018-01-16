@@ -62,23 +62,27 @@ class Redirect extends \Magento\Framework\View\Element\Template
 
     public function getCfg($k)
     {
-      return $this->scope->getValue('payment/interkassa_payment/'.$k,\Magento\Store\Model\ScopeInterface::SCOPE_STORES);
+        return $this->scope->getValue('payment/interkassa_payment/'.$k,\Magento\Store\Model\ScopeInterface::SCOPE_STORES);
     }
     public function getAPIUrl()
     {
-      return $this -> getContinueUrl() . 'interkassa/request/api';
+        return $this -> getContinueUrl() . 'interkassa/request/api';
     }
     public function getCallBackUrl()
     {
-      return $this -> getContinueUrl() . 'interkassa/request/callback';
+        return $this -> getContinueUrl() . 'interkassa/request/callback';
+    }
+    public function getSuccessUrl()
+    {
+        return $this -> getContinueUrl() . 'checkout/onepage/success';
     }
     public function getResponseUrl()
     {
-      return $this -> getContinueUrl() . 'interkassa/request/response';
+        return $this -> getContinueUrl() . 'interkassa/request/response';
     }
     public function getImage($image)
     {
-      return (string) $this->getViewFileUrl('Magento_InterkassaPayment::images/'. $image .'.png');
+        return (string) $this->getViewFileUrl('Magento_InterkassaPayment::images/'. $image .'.png');
     }
     public function getAmount($orderId)
     {

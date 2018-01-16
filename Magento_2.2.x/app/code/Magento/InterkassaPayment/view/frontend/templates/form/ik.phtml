@@ -13,7 +13,7 @@ $cfg = array(
 	'ik_desc'=>'Payment for order #'.$order->getIncrementId(),
 	'ik_cur'=>$order->getOrderCurrencyCode(),
 	'ik_ia_u'=> $this->getCallBackUrl(),
-	'ik_suc_u'=>$this -> getResponseUrl(),
+	'ik_suc_u'=>$this -> getSuccessUrl(),
 	'ik_fal_u' => $this -> getResponseUrl(),
     'ik_pnd_u' => $this -> getContinueUrl()
 );

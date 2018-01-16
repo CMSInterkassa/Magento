@@ -10,7 +10,7 @@
             </action>
         </referenceBlock>
         <referenceContainer name="content">
-            <block class="Magento\InterkassaPayment\Block\Response" name="interkassapayment_request_response" template="Magento_InterkassaPayment::response.phtml" cacheable="false"/>
+            <block class="Magento\InterkassaPayment\Block\Response" name="interkassa.request.response" template="Magento_InterkassaPayment::response.phtml" cacheable="false"/>
         </referenceContainer>
     </body>
 </page>

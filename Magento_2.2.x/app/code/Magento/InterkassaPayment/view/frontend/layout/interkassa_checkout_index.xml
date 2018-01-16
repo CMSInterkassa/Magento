@@ -11,13 +11,12 @@
     </head>
     <body>
         <referenceBlock name="page.main.title">
-            <block class="Magento\Checkout\Block\Onepage\Success" name="checkout.success.print.button" template="Magento_Checkout::button.phtml"/>
             <action method="setPageTitle">
                 <argument translate="true" name="title" xsi:type="string">Thank you for your purchase!</argument>
             </action>
         </referenceBlock>
         <referenceContainer name="content">
-            <block class="Magento\InterkassaPayment\Block\Redirect" name="checkout.success" template="Magento_InterkassaPayment::form/ik.phtml" cacheable="false">
+            <block class="Magento\InterkassaPayment\Block\Redirect" name="interkassa.checkout.index" template="Magento_InterkassaPayment::form/ik.phtml" cacheable="false">
                 <container name="order.success.additional.info" label="Order Success Additional Info"/>
             </block>
         </referenceContainer>
