@@ -27,6 +27,10 @@ class Redirect extends \Magento\Framework\View\Element\Template
     public $payment_systems;
     private $scope;
 
+
+    const ikUrlSCI = 'https://sci.interkassa.com/';
+    const ikUrlAPI = 'https://api.interkassa.com/v1/';
+
     /**
      * @param \Magento\Framework\View\Element\Template\Context $context
      * @param \Magento\Checkout\Model\Session $checkoutSession
@@ -92,41 +96,95 @@ class Redirect extends \Magento\Framework\View\Element\Template
     }
     public function getIkPaymentSystems()
     {
-      $username = $this->getCfg('api_id');
-      $password = $this->getCfg('api_key');
-      $remote_url = 'https://api.interkassa.com/v1/paysystem-input-payway?checkoutId=' . $this->getCfg('id_cashbox');
+        $username = $this->getCfg('api_id');
+        $password = $this->getCfg('api_key');
+        $remote_url = self::ikUrlAPI . 'paysystem-input-payway?checkoutId=' . $this->getCfg('id_cashbox');
 
-      // Create a stream
-      $opts = array(
-        'http' => array(
-          'method' => "GET",
-          'header' => "Authorization: Basic " . base64_encode("$username:$password")
-        )
-      );
+        $businessAcc = $this->getIkBusinessAcc($username, $password);
 
-      $context = stream_context_create($opts);
-      $file = file_get_contents($remote_url, false, $context);
-      $json_data = json_decode($file);
-      if($json_data->status != 'error'){
-
-        $payment_systems = array();
-        foreach ($json_data->data as $ps => $info) {
-          $payment_system = $info->ser;
-          if (!array_key_exists($payment_system, $payment_systems)) {
-            $payment_systems[$payment_system] = array();
-            foreach ($info->name as $name) {
-              if ($name->l == 'en') {
-                $payment_systems[$payment_system]['title'] = ucfirst($name->v);
-              }
-              $payment_systems[$payment_system]['name'][$name->l] = $name->v;
-            }
-          }
-          $payment_systems[$payment_system]['currency'][strtoupper($info->curAls)] = $info->als;
+        $ikHeaders = [];
+        $ikHeaders[] = "Authorization: Basic " . base64_encode("$username:$password");
+        if(!empty($businessAcc)) {
+            $ikHeaders[] = "Ik-Api-Account-Id: " . $businessAcc;
         }
-        return $payment_systems;
-      }
-      else
-        return '<strong style="color:red;">API connection error!<br>'.$json_data->message.'</strong>';
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $remote_url);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $ikHeaders);
+        $response = curl_exec($ch);
+
+        if(empty($response))
+            return '<strong style="color:red;">Error!!! System response empty!</strong>';
+
+        $json_data = json_decode($response);
+        if ($json_data->status != 'error') {
+            $payment_systems = array();
+            if(!empty($json_data->data)){
+                foreach ($json_data->data as $ps => $info) {
+                    $payment_system = $info->ser;
+                    if (!array_key_exists($payment_system, $payment_systems)) {
+                        $payment_systems[$payment_system] = array();
+                        foreach ($info->name as $name) {
+                            if ($name->l == 'en') {
+                                $payment_systems[$payment_system]['title'] = ucfirst($name->v);
+                            }
+                            $payment_systems[$payment_system]['name'][$name->l] = $name->v;
+                        }
+                    }
+                    $payment_systems[$payment_system]['currency'][strtoupper($info->curAls)] = $info->als;
+                }
+            }
+
+            return !empty($payment_systems)? $payment_systems : '<strong style="color:red;">API connection error or system response empty!</strong>';
+        } else {
+            if(!empty($json_data->message))
+                return '<strong style="color:red;">API connection error!<br>' . $json_data->message . '</strong>';
+            else
+                return '<strong style="color:red;">API connection error or system response empty!</strong>';
+        }
+    }
+
+    public function getIkBusinessAcc($username = '', $password = '')
+    {
+        $tmpLocationFile = __DIR__ . '/tmpLocalStorageBusinessAcc.ini';
+        $dataBusinessAcc = function_exists('file_get_contents')? file_get_contents($tmpLocationFile) : '{}';
+        $dataBusinessAcc = json_decode($dataBusinessAcc, 1);
+        $businessAcc = is_string($dataBusinessAcc['businessAcc'])? trim($dataBusinessAcc['businessAcc']) : '';
+        if(empty($businessAcc) || sha1($username . $password) !== $dataBusinessAcc['hash']) {
+            $curl = curl_init();
+            curl_setopt($curl, CURLOPT_URL, self::ikUrlAPI . 'account');
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, false);
+            curl_setopt($curl, CURLOPT_HEADER, false);
+            curl_setopt($curl, CURLOPT_HTTPHEADER, ["Authorization: Basic " . base64_encode("$username:$password")]);
+            $response = curl_exec($curl);
+
+            if (!empty($response['data'])) {
+                foreach ($response['data'] as $id => $data) {
+                    if ($data['tp'] == 'b') {
+                        $businessAcc = $id;
+                        break;
+                    }
+                }
+            }
+
+            if(function_exists('file_put_contents')){
+                $updData = [
+                    'businessAcc' => $businessAcc,
+                    'hash' => sha1($username . $password)
+                ];
+                file_put_contents($tmpLocationFile, json_encode($updData, JSON_PRETTY_PRINT));
+            }
+
+            return $businessAcc;
+        }
+
+        return $businessAcc;
     }
 
     public function IkSignFormation($data, $secret_key)

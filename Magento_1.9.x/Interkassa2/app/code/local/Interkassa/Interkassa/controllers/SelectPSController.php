@@ -10,14 +10,8 @@ class Interkassa_Interkassa_SelectPSController extends Mage_Core_Controller_Fron
 {
     public function indexAction()
     {
-//        $this->getResponse()
-//          // ->setHeader('Content-type', 'text/html; charset=utf8')
-//            ->setHeader('Content-type', 'application/json; charset=utf8')
-//            ->setBody($this->getLayout()
-//                ->createBlock('Interkassa/response')
-//                ->checkPaySystem());
         ob_clean();
-        echo $this->getLayout()->createBlock('Interkassa/response')->checkPaySystem();
+        echo $this->getLayout()->createBlock('Interkassa/response')->selectPaySystem();
         exit;
     }
 }

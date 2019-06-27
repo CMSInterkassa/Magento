@@ -17,7 +17,9 @@ $cfg = array(
 	'ik_fal_u' => $this -> getResponseUrl(),
     'ik_pnd_u' => $this -> getContinueUrl()
 );
-if($this->getCfg('test')) $cfg['ik_pw_via']='test_interkassa_test_xts';
+if($this->getCfg('test'))
+	$cfg['ik_pw_via']='test_interkassa_test_xts';
+
 $cfg['ik_sign'] = $this->IkSignFormation($cfg, $this->getCfg('secret_key'));
 ?>
 <div class="ik button">

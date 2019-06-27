@@ -19,7 +19,7 @@ class Interkassa_Interkassa_Block_Response extends Mage_Core_Block_Abstract
             'test_key' => $interkassa->getConfigData('test_key')
         );
 
-        if (count($_POST) && $this->checkIP() && $settings['ik_co_id'] == $_POST['ik_co_id']) {
+        if (!empty($_POST) && $this->checkIP() && $settings['ik_co_id'] == $_POST['ik_co_id']) {
 
             if ($_POST['ik_inv_st'] == 'success') {
 
@@ -38,8 +38,8 @@ class Interkassa_Interkassa_Block_Response extends Mage_Core_Block_Abstract
                     $order->loadByIncrementId($_POST['ik_pm_no']);
                     $order->setState(Mage_Sales_Model_Order::STATE_CANCELED, true, 'Цифровая подпись не совпала! Заказ отменен!');
 
+                    $this->wrlog('Подписи не совпадают!');
                 } else {
-                    $this->wrlog('Подписи совпадают!');
                     //СМЕНА СТАТУСА ЗАКАЗА В АДМИНКЕ В СЛУЧАЕ УСПЕШНОЙ ОПЛАТЫ
                     $order = Mage::getModel('sales/order');
                     $order->loadByIncrementId($_POST['ik_pm_no']);
@@ -66,12 +66,10 @@ class Interkassa_Interkassa_Block_Response extends Mage_Core_Block_Abstract
 
     }
 
-    public function checkPaySystem()
+    public function selectPaySystem()
     {
         $interkassa = Mage::getModel('Interkassa/Interkassa');
-        $secret_key = $this->getConfigData('secret_key');
-        if (isset($_POST['ik_pw_via']) && $_POST['ik_pw_via'] == 'test_interkassa_test_xts')
-            $secret_key = $this->getConfigData('test_key');
+        $secret_key = $interkassa->getConfigData('secret_key');
 
         if (isset($_POST['ik_act']) && $_POST['ik_act'] == 'process')
             return $interkassa->getAnswerFromAPI($_POST);
@@ -79,14 +77,14 @@ class Interkassa_Interkassa_Block_Response extends Mage_Core_Block_Abstract
             return $interkassa->IkSignFormation($_POST, $secret_key);
     }
 
-//Функция для ведения лога
     public function wrlog($content)
-    {
+    {//Функция для ведения лога
         $file = 'log.txt';
         $doc = fopen($file, 'a');
         file_put_contents($file, PHP_EOL . $content, FILE_APPEND);
         fclose($doc);
     }
+
     public function checkIP(){
         $ip_stack = array(
             'ip_begin'=>'151.80.190.97',
